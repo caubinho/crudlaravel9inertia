@@ -1,0 +1,53 @@
+<?php
+
+namespace App\Rules\Tenant;
+
+use App\Tenant\ManagerTenant;
+use Illuminate\Contracts\Validation\Rule;
+
+class TenantUnique implements Rule
+{
+    private $table, $column, $colnmValue;
+    /**
+     * Create a new rule instance.
+     *
+     * @return void
+     */
+    public function __construct($table, $colnmValue = null, $column = 'id',)
+    {
+        $this->table        = $table;
+        $this->column       = $column;
+        $this->colnmValue   = $colnmValue;
+    }
+
+    /**
+     * Determine if the validation rule passes.
+     *
+     * @param  string  $attribute
+     * @param  mixed  $value
+     * @return bool
+     */
+    public function passes($attribute, $value)
+    {
+        $tenant = app(ManagerTenant::class)->getTenantIdentify();
+        $result = \DB::table('posts')
+            ->where($attribute, $value)
+            ->where('tenant_id', $tenant)
+            ->first();
+
+        if($result && $result->{$this->column} == $this->colnmValue)
+            return true;
+
+        return is_null($result);
+    }
+
+    /**
+     * Get the validation error message.
+     *
+     * @return string
+     */
+    public function message()
+    {
+        return 'O valor para :attribute já está em uso!';
+    }
+}
